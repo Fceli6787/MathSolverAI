@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Solver IA</title>    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">    <!-- Agregar MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    <style>
+        .latex-block {
+            display: block;
+            text-align: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            border-left: 4px solid #3b82f6;
+            font-family: 'Computer Modern', serif;
+            font-size: 1.1em;
+        }
+
+        .latex-inline {
+            background-color: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Computer Modern', serif;
+            color: #1e40af;
+        }
+
+        .prose {
+            line-height: 1.6;
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .group:hover .group-hover\:opacity-100 {
+            opacity: 1;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip-trigger:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Math Solver IA
+            </h1>
+            <p class="text-gray-600">Resuelve problemas matemáticos paso a paso con inteligencia artificial</p>
+        </div>
+        <!-- Input Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100">
+            <div class="space-y-4">
+                <!-- Text Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Describe tu problema matemático
+                    </label>
+                    <textarea
+                        id="inputText"
+                        placeholder="Ejemplo: Resuelve la ecuación cuadrática 2x² - 5x + 2 = 0"
+                        class="w-full h-32 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200"
+                    ></textarea>
+                </div>
+
+                <!-- Image Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        O sube imágenes del problema
+                    </label>
+                    <div class="flex gap-3">
+                        <button
+                            id="uploadBtn"
+                            class="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 text-gray-600 hover:text-blue-600"
+                        >
+                            <i data-lucide="upload" class="w-5 h-5"></i>
+                            Subir imagen
+                        </button>
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept="image/*"
+                            multiple
+                            class="hidden"
+                        />
+                    </div>
+
+                    <!-- Model Info -->
+                    <div id="modelInfo" class="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p class="text-sm text-blue-700">
+                            <strong>Modelo seleccionado:</strong>
+                            <span id="selectedModel">DeepSeek Prover V2 (optimizado para matemáticas)</span>
+                        </p>
+                    </div>
+
+                    <!-- Uploaded Images Preview -->
+                    <div id="imagePreview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 hidden"></div>
+                </div>
+
+                <!-- Solve Button -->
+                <button
+                    id="solveBtn"
+                    disabled
+                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                    <span id="solveBtnText">Resolver Problema</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 hidden">
+            <p id="errorMessage" class="text-red-700 font-medium"></p>
+        </div>
+
+        <!-- Loading Section -->
+        <div id="loadingSection" class="bg-white rounded-2xl shadow-xl p-8 mb-6 border border-gray-100 hidden">
+            <div class="flex flex-col items-center">
+                <div class="relative mb-4">
+                    <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full opacity-20 animate-pulse"></div>
+                    </div>
+                </div>
+                <p id="loadingMessage" class="text-lg font-medium text-gray-700 animate-pulse">
+                    Pensando en la solución...
+                </p>
+            </div>
+        </div>
+
+        <!-- Solution Section -->
+        <div id="solutionSection" class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <span class="text-white text-sm">✓</span>
+                </div>
+                Solución paso a paso
+            </h2>
+            <div id="solutionContent" class="prose max-w-none"></div>
+        </div>
+    </div>
+
+    <!-- Cargar el script de Lucide con defer -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js" defer></script>    <!-- Tu script principal -->
+    <script type="module">
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', async function() {            // Variables globales
+            let uploadedImages = [];
+            let isLoading = false;
+            const API_KEYS = [
+                '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',
+                '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'
+            ];
+            let currentKeyIndex = 0;
+
+            // Elementos del DOM
+            const inputText = document.getElementById('inputText');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const selectedModel = document.getElementById('selectedModel');
+            const solveBtn = document.getElementById('solveBtn');
+            const solveBtnText = document.getElementById('solveBtnText');
+            const errorSection = document.getElementById('errorSection');
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingSection = document.getElementById('loadingSection');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const solutionSection = document.getElementById('solutionSection');
+            const solutionContent = document.getElementById('solutionContent');
+
+            // Inicializar Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                console.error('Lucide is not defined');
+            }
+
+            // Mensajes de carga
+            const loadingMessages = [
+                'Pensando en la solución...',
+                'Ya casi...',
+                'Listo'
+            ];
+
+            // Toggle API Key visibility
+            toggleApiKeyBtn.addEventListener('click', () => {
+                showApiKey = !showApiKey;
+                apiKeyInput.type = showApiKey ? 'text' : 'password';
+                toggleApiKeyBtn.innerHTML = showApiKey
+                    ? '<i data-lucide="eye" class="w-5 h-5"></i>'
+                    : '<i data-lucide="eye-off" class="w-5 h-5"></i>';
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            });
+
+            // Upload button click
+            uploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // File input change
+            fileInput.addEventListener('change', (event) => {
+                const files = Array.from(event.target.files);
+
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const imageData = {
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            url: e.target.result
+                        };
+                        uploadedImages.push(imageData);
+                        updateImagePreview();
+                        updateModelInfo();
+                        updateSolveButton();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            // Update image preview
+            function updateImagePreview() {
+                if (uploadedImages.length > 0) {
+                    imagePreview.classList.remove('hidden');
+                    imagePreview.innerHTML = uploadedImages.map(image => `
+                        <div class="relative group">
+                            <img src="${image.url}" alt="${image.name}" class="w-full h-24 object-cover rounded-lg border">
+                            <button onclick="removeImage('${image.id}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                } else {
+                    imagePreview.classList.add('hidden');
+                }
+            }
+
+            // Remove image
+            function removeImage(imageId) {
+                uploadedImages = uploadedImages.filter(img => img.id !== imageId);
+                updateImagePreview();
+                updateModelInfo();
+                updateSolveButton();
+            }
+
+            // Update model info
+            function updateModelInfo() {
+                if (uploadedImages.length > 0) {
+                    selectedModel.textContent = 'Google Gemma 3 27B (con visión para imágenes)';
+                } else {
+                    selectedModel.textContent = 'DeepSeek Prover V2 (optimizado para matemáticas)';
+                }
+            }            // Update solve button state
+            function updateSolveButton() {
+                const hasContent = inputText.value.trim() || uploadedImages.length > 0;
+                solveBtn.disabled = !hasContent || isLoading;
+            }
+
+            // Event listeners for input changes
+            inputText.addEventListener('input', updateSolveButton);// Función para procesar LaTeX y Markdown
+            function processContent(text) {
+                // Preservar bloques de LaTeX
+                const blocks = [];
+                text = text.replace(/(\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g, (match) => {
+                    blocks.push(match);
+                    return `@@BLOCK${blocks.length - 1}@@`;
+                });
+
+                // Procesar Markdown
+                text = text
+                    // Encabezados
+                    .replace(/^### (.*$)/gm, '<h3 class="text-2xl font-bold mt-6 mb-4">$1</h3>')
+                    .replace(/^## (.*$)/gm, '<h2 class="text-3xl font-bold mt-8 mb-4">$1</h2>')
+                    .replace(/^# (.*$)/gm, '<h1 class="text-4xl font-bold mt-10 mb-6">$1</h1>')
+                    // Negrita y cursiva
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    // Listas
+                    .replace(/^\s*[-*+]\s+(.*)$/gm, '<li class="ml-4">$1</li>')
+                    // Párrafos
+                    .replace(/\n\n/g, '</p><p class="mb-4">')
+                    .replace(/\n(?!<\/?[uo]l|<\/?\w+>)/g, '<br>');
+
+                // Restaurar bloques de LaTeX
+                text = text.replace(/@@BLOCK(\d+)@@/g, (_, i) => blocks[i]);
+
+                // Procesar otros formatos de LaTeX que pueden venir de diferentes modelos
+                text = text
+                    .replace(/\$\$(.*?)\$\$/g, '\\[$1\\]')
+                    .replace(/\$(.*?)\$/g, '\\($1\\)');
+
+                return text;
+            }
+
+            // Función para renderizar el contenido
+            function renderMarkdown(content) {
+                let processed = `<div class="prose max-w-none"><p class="mb-4">${processContent(content)}</p></div>`;
+                
+                // Forzar a MathJax a reprocesar el contenido
+                if (window.MathJax) {
+                    setTimeout(() => {
+                        MathJax.typesetPromise();
+                    }, 100);
+                }
+
+                return processed;
+            }
+
+            // Show error
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorSection.classList.remove('hidden');
+            }
+
+            // Hide error
+            function hideError() {
+                errorSection.classList.add('hidden');
+            }
+
+            // Show loading
+            function showLoading() {
+                loadingSection.classList.remove('hidden');
+                solutionSection.classList.add('hidden');
+            }
+
+            // Hide loading
+            function hideLoading() {
+                loadingSection.classList.add('hidden');
+            }
+
+            // Show solution
+            function showSolution(content) {
+                solutionContent.innerHTML = renderMarkdown(content);
+                solutionSection.classList.remove('hidden');
+            }            // Función para hacer la llamada a OpenRouter usando fetch
+            async function callOpenRouter(messages, model) {
+                let lastError;
+                
+                for (let i = currentKeyIndex; i < API_KEYS.length; i++) {
+                    try {
+                        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${API_KEYS[i]}`,
+                                'Content-Type': 'application/json',
+                                'HTTP-Referer': window.location.origin,
+                                'X-Title': 'Math Solver IA'
+                            },
+                            body: JSON.stringify({
+                                model: model,
+                                messages: messages
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error?.message || 'Error en la API');
+                        }
+
+                        // Si la llamada fue exitosa, guardamos el índice de la key que funcionó
+                        currentKeyIndex = i;
+                        return await response.json();
+                    } catch (error) {
+                        console.error(`Error con API key ${i + 1}:`, error);
+                        lastError = error;
+                        // Si esta no es la última key, continuamos con la siguiente
+                        if (i < API_KEYS.length - 1) {
+                            continue;
+                        }
+                    }
+                }
+                
+                // Si llegamos aquí, ninguna key funcionó
+                throw new Error(lastError?.message || 'Error en todas las API keys');
+            }            // Función principal para resolver problema
+            async function solveProblem() {
+                isLoading = true;
+                updateSolveButton();
+                solveBtnText.textContent = 'Resolviendo...';
+                hideError();
+                showLoading();
+
+                try {
+                    // Mostrar mensajes de carga
+                    for (let i = 0; i < loadingMessages.length; i++) {
+                        loadingMessage.textContent = loadingMessages[i];
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+
+                    // Determinar modelo y construir mensajes según si hay imágenes
+                    let model, messages;
+
+                    if (uploadedImages.length > 0) {
+                        // Usar modelo con visión para imágenes
+                        model = "google/gemma-3-27b-it:free";
+
+                        const content = [
+                            {
+                                type: "text",
+                                text: `Resuelve este problema matemático paso a paso. Proporciona una explicación detallada con todos los pasos. ${inputText.value ? `Problema: ${inputText.value}` : 'Analiza la imagen y resuelve el problema matemático que se muestra.'}`
+                            }
+                        ];
+
+                        // Agregar imágenes al contenido
+                        uploadedImages.forEach(image => {
+                            content.push({
+                                type: "image_url",
+                                image_url: {
+                                    url: image.url
+                                }
+                            });
+                        });
+
+                        messages = [
+                            {
+                                role: "user",
+                                content: content
+                            }
+                        ];
+                    } else {
+                        // Usar modelo de texto para problemas sin imágenes
+                        model = "deepseek/deepseek-prover-v2:free";
+                        messages = [
+                            {
+                                role: "user",
+                                content: `Resuelve este problema matemático paso a paso. Proporciona una explicación detallada con todos los pasos necesarios para llegar a la solución. Usa formato markdown para las fórmulas matemáticas con LaTeX cuando sea necesario.
+
+Problema: ${inputText.value}`
+                            }
+                        ];
+                    }
+
+                    // Llamar a la API
+                    const completion = await callOpenRouter(messages, model);
+
+                    if (completion.choices && completion.choices[0] && completion.choices[0].message) {
+                        showSolution(completion.choices[0].message.content);
+                    } else {
+                        throw new Error('Respuesta inválida de la API');
+                    }
+
+                } catch (err) {
+                    console.error('Error:', err);
+                    showError(`Error: ${err.message}`);
+                } finally {
+                    isLoading = false;
+                    solveBtnText.textContent = 'Resolver Problema';
+                    updateSolveButton();
+                    hideLoading();
+                }
+            }
+
+            // Event listener para el botón de resolver
+            solveBtn.addEventListener('click', () => {
+                if (inputText.value.trim() || uploadedImages.length > 0) {
+                    solveProblem();
+                }
+            });
+
+            // Inicializar estado
+            updateSolveButton();
+        });
+    </script>
+</body>
+</html>
