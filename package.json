@@ -1,0 +1,32 @@
+{
+  "name": "math-solver-ia",
+  "version": "1.0.0",
+  "description": "Aplicación web para resolver problemas matemáticos usando inteligencia artificial",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js"
+  },
+  "keywords": [
+    "math",
+    "solver",
+    "ai",
+    "mathematics",
+    "openrouter",
+    "latex"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

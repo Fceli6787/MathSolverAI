@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Resuelve problemas matemáticos paso a paso con inteligencia artificial">
+    <title>Math Solver IA - Resuelve Problemas Matemáticos</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+    
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="../src/css/styles.css">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Math Solver IA
+            </h1>
+            <p class="text-gray-600">Resuelve problemas matemáticos paso a paso con inteligencia artificial</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100">
+            <div class="space-y-4">
+                <!-- Text Input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Describe tu problema matemático
+                    </label>
+                    <textarea
+                        id="inputText"
+                        placeholder="Ejemplo: Resuelve la ecuación cuadrática 2x² - 5x + 2 = 0"
+                        class="w-full h-32 p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200"
+                    ></textarea>
+                </div>
+
+                <!-- Image Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        O sube imágenes del problema
+                    </label>
+                    <div class="flex gap-3">
+                        <button
+                            id="uploadBtn"
+                            class="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 text-gray-600 hover:text-blue-600"
+                        >
+                            <i data-lucide="upload" class="w-5 h-5"></i>
+                            Subir imagen
+                        </button>
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept="image/*"
+                            multiple
+                            class="hidden"
+                        />
+                    </div>
+
+                    <!-- Model Info -->
+                    <div id="modelInfo" class="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p class="text-sm text-blue-700">
+                            <strong>Modelo seleccionado:</strong>
+                            <span id="selectedModel">DeepSeek Prover V2 (optimizado para matemáticas)</span>
+                        </p>
+                    </div>
+
+                    <!-- Uploaded Images Preview -->
+                    <div id="imagePreview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 hidden"></div>
+                </div>
+
+                <!-- Solve Button -->
+                <button
+                    id="solveBtn"
+                    disabled
+                    class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                    <span id="solveBtnText">Resolver Problema</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 hidden">
+            <div class="flex items-start gap-3">
+                <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 mt-0.5"></i>
+                <p id="errorMessage" class="text-red-700 font-medium"></p>
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div id="loadingSection" class="bg-white rounded-2xl shadow-xl p-8 mb-6 border border-gray-100 hidden">
+            <div class="flex flex-col items-center">
+                <div class="relative mb-4">
+                    <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full opacity-20 animate-pulse"></div>
+                    </div>
+                </div>
+                <p id="loadingMessage" class="text-lg font-medium text-gray-700 animate-pulse">
+                    Pensando en la solución...
+                </p>
+            </div>
+        </div>
+
+        <!-- Solution Section -->
+        <div id="solutionSection" class="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <i data-lucide="check" class="w-5 h-5 text-white"></i>
+                </div>
+                Solución paso a paso
+            </h2>
+            <div id="solutionContent" class="prose max-w-none"></div>
+        </div>
+    </div>
+
+    <!-- Lucide Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    
+    <!-- Scripts de la aplicación -->
+    <script type="module" src="../src/js/main.js"></script>
+</body>
+</html>
