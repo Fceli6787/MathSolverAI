@@ -68,31 +68,9 @@ La app utiliza modelos de IA especializados para matemáticas y visión, y un ba
 
 ---
 
-## 📂 Estructura del Proyecto
+## 📂 Arquitectura del proyecto
 
-```bash
-math-solver-ia/
-├── .gitignore
-├── README.md
-├── LICENSE
-├── package.json
-├── .env.example
-├── public/
-│   └── index.html          # HTML principal
-├── src/
-│   ├── css/
-│   │   └── styles.css      # Estilos personalizados (con :root)
-│   └── js/
-│       ├── main.js         # Lógica principal del frontend
-│       ├── api.js          # Llamadas al backend
-│       ├── ui.js           # Manejo de DOM y estados visuales
-│       └── utils.js        # Utilidades (Base64, LaTeX, etc.)
-└── server/
-    ├── server.js           # Servidor Express
-    └── routes/
-        └── api.js          # Endpoints /api/solve y /api/health
-```
-
+![alt text](image.png)
 ---
 
 ## ⚙️ Instalación y Configuración
